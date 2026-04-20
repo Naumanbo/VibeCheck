@@ -1,9 +1,14 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   View, Text, TouchableOpacity, ScrollView, StyleSheet,
-  Animated, StatusBar, SafeAreaView, Platform, Vibration, Modal,
+  Animated, StatusBar, Platform, Vibration, Modal, Linking, Alert, AppState,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
+import {
+  getRecordingPermissionsAsync,
+  requestRecordingPermissionsAsync,
+} from 'expo-audio';
 import { Audio } from 'expo-av';
 
 /* ─────────────── SOUND DATA ─────────────── */
@@ -34,6 +39,11 @@ const SOUNDS = {
     color: '#BF5AF2', bgColor: '#220030',
     desc: 'Infant distress sounds', priority: 'HIGH',
   },
+  intruder: {
+    id: 'intruder', label: 'Intruder Alert', emoji: '🚪',
+    color: '#FF2D55', bgColor: '#3D0011',
+    desc: 'Forced entry or break-in detected', priority: 'CRITICAL',
+  },
 };
 
 // dB threshold above which a sound is considered a detection event
@@ -56,90 +66,99 @@ const COOLDOWN_SEC = 5;
 // required user-interaction context. Vibration.vibrate() is called alongside
 // it as a belt-and-suspenders fallback.
 
-const sleep = ms => new Promise(r => setTimeout(r, ms));
-
-// [pulseCount, gapMs, hapticFn]
-const IOS_PATTERNS = {
-  smokeAlarm: [5, 80,  () => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error)  ],
-  doorbell:   [2, 500, () => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)            ],
-  knocking:   [3, 100, () => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy)             ],
-  microwave:  [2, 750, () => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)             ],
-  babyCrying: [3, 300, () => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning)],
+// Vibration patterns per sound — each is [count, gapMs]
+// Distinct by feel: different pulse counts and tempos
+const HAPTIC_PATTERNS = {
+  smokeAlarm: { count: 5, gap: 80  },   // rapid-fire alarm
+  doorbell:   { count: 2, gap: 500 },   // slow ding-dong
+  knocking:   { count: 3, gap: 100 },   // knock knock knock
+  microwave:  { count: 2, gap: 750 },   // slow appliance beep
+  babyCrying: { count: 3, gap: 300 },   // sustained rhythmic cry
+  intruder:   { count: 8, gap: 60  },   // intense rapid burst — max strength
 };
 
-// Call this directly from onPress (no async wrapper) so the first
-// Haptics call lands inside the iOS user-interaction window.
-function triggerHaptics(soundId) {
+// Android vibration patterns: [pause, vibrate, pause, vibrate, ...]
+const ANDROID_PATTERNS = {
+  smokeAlarm: [0, 400, 80, 400, 80, 400, 80, 400, 80, 400],
+  doorbell:   [0, 250, 500, 250],
+  knocking:   [0, 120, 100, 120, 100, 120],
+  microwave:  [0, 200, 750, 200],
+  babyCrying: [0, 280, 300, 280, 300, 280],
+  intruder:   [0, 500, 60, 500, 60, 500, 60, 500, 60, 500, 60, 500, 60, 500, 60, 500],
+};
+
+// Module-level ref so triggerHaptics can pause/resume the active recording
+let _activeRecording = null;
+let _vibrationInProgress = false;
+
+// On iOS, the AVAudioSessionCategoryPlayAndRecord (set by allowsRecordingIOS:true)
+// suppresses Vibration.vibrate() and expo-haptics. We must temporarily pause
+// recording, reset audio mode, fire vibration, then resume.
+async function triggerHaptics(soundId) {
   if (Platform.OS === 'android') {
-    const patterns = {
-      smokeAlarm: [0, 400, 80, 400, 80, 400, 80, 400, 80, 400],
-      doorbell:   [0, 250, 500, 250],
-      knocking:   [0, 120, 100, 120, 100, 120],
-      microwave:  [0, 200, 750, 200],
-      babyCrying: [0, 280, 300, 280, 300, 280],
-    };
-    Vibration.vibrate(patterns[soundId] ?? [0, 300]);
+    Vibration.vibrate(ANDROID_PATTERNS[soundId] ?? [0, 300]);
     return;
   }
 
-  const [count, gap, hapticFn] = IOS_PATTERNS[soundId] ?? [1, 200, () => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy)];
+  const { count, gap } = HAPTIC_PATTERNS[soundId] ?? { count: 1, gap: 200 };
+  const totalDuration = count * gap + 100;
 
-  // Fire the full sequence via nested setTimeouts so every buzz lands on
-  // the JS main thread with no async/await overhead.
-  for (let i = 0; i < count; i++) {
+  // If already vibrating, just fire without pause/resume dance
+  if (_vibrationInProgress) {
+    Vibration.vibrate();
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => {});
+    for (let i = 1; i < count; i++) {
+      setTimeout(() => {
+        Vibration.vibrate();
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy).catch(() => {});
+      }, i * gap);
+    }
+    return;
+  }
+
+  _vibrationInProgress = true;
+
+  // Pause active recording and reset audio mode so vibrations work
+  const hadRecording = !!_activeRecording;
+  if (hadRecording) {
+    try {
+      await _activeRecording.pauseAsync();
+      await Audio.setAudioModeAsync({ allowsRecordingIOS: false, playsInSilentModeIOS: true });
+    } catch (e) {
+      console.warn('Pause recording for haptics:', e.message);
+    }
+  }
+
+  // Fire vibration pattern
+  Vibration.vibrate();
+  Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => {});
+
+  for (let i = 1; i < count; i++) {
     setTimeout(() => {
       Vibration.vibrate();
-      hapticFn().catch(() => {});
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy).catch(() => {});
     }, i * gap);
   }
+
+  // Resume recording after vibration finishes
+  setTimeout(async () => {
+    _vibrationInProgress = false;
+    if (hadRecording && _activeRecording) {
+      try {
+        await Audio.setAudioModeAsync({ allowsRecordingIOS: true, playsInSilentModeIOS: true });
+        await _activeRecording.startAsync();
+      } catch (e) {
+        console.warn('Resume recording after haptics:', e.message);
+      }
+    }
+  }, totalDuration);
 }
 
 /* ─────────────── MICROPHONE ─────────────── */
 
 async function requestMicPermission() {
-  const { status } = await Audio.requestPermissionsAsync();
-  return status === 'granted';
-}
-
-async function startRecording(onStatus) {
-  await Audio.setAudioModeAsync({
-    allowsRecordingIOS: true,
-    playsInSilentModeIOS: true,
-  });
-  const { recording } = await Audio.Recording.createAsync(
-    {
-      android: {
-        extension: '.m4a',
-        outputFormat: 2,    // MPEG_4
-        audioEncoder: 3,    // AAC
-        sampleRate: 16000,
-        numberOfChannels: 1,
-        bitRate: 32000,
-      },
-      ios: {
-        extension: '.m4a',
-        outputFormat: 'aac ',
-        audioQuality: 0,    // Min quality — we only need metering
-        sampleRate: 16000,
-        numberOfChannels: 1,
-        bitRate: 32000,
-        linearPCMBitDepth: 16,
-        linearPCMIsBigEndian: false,
-        linearPCMIsFloat: false,
-      },
-      isMeteringEnabled: true,
-    },
-    onStatus,
-    300  // status update interval ms
-  );
-  return recording;
-}
-
-async function stopRecording(recording) {
-  try {
-    await recording.stopAndUnloadAsync();
-  } catch (_) {}
-  await Audio.setAudioModeAsync({ allowsRecordingIOS: false });
+  const { granted } = await requestRecordingPermissionsAsync();
+  return granted;
 }
 
 /* ─────────────── UTILS ─────────────── */
@@ -188,7 +207,7 @@ function RingAnim({ color, size, delay: d = 0 }) {
 function Onboarding({ onFinish }) {
   const [step, setStep] = useState(0);
   const [enabled, setEnabled] = useState({
-    smokeAlarm: true, doorbell: true, knocking: true, microwave: true, babyCrying: false,
+    smokeAlarm: true, doorbell: true, knocking: true, microwave: true, babyCrying: false, intruder: true,
   });
   const [micGranted, setMicGranted] = useState(false);
   const [tested, setTested] = useState(false);
@@ -196,9 +215,25 @@ function Onboarding({ onFinish }) {
   const toggle = id => setEnabled(p => ({ ...p, [id]: !p[id] }));
 
   const handleMicRequest = async () => {
-    const granted = await requestMicPermission();
-    setMicGranted(granted);
-    setStep(2);
+    const { status } = await getRecordingPermissionsAsync();
+    if (status === 'granted') {
+      setMicGranted(true);
+      setStep(2);
+    } else if (status === 'undetermined') {
+      const { granted } = await requestRecordingPermissionsAsync();
+      setMicGranted(granted);
+      setStep(2);
+    } else {
+      // Previously denied — iOS won't re-prompt, send to Settings
+      Alert.alert(
+        'Microphone Access Required',
+        'You previously denied microphone access. Please enable it in Settings to use VibeCheck.',
+        [
+          { text: 'Skip', style: 'cancel', onPress: () => setStep(2) },
+          { text: 'Open Settings', onPress: () => Linking.openSettings() },
+        ],
+      );
+    }
   };
 
   const pages = [
@@ -433,9 +468,13 @@ function AlertScreen({ alertType, onDismiss }) {
 
   useEffect(() => {
     triggerHaptics(alertType);
-    if (s.priority === 'CRITICAL') {
-      intervalRef.current = setInterval(() => triggerHaptics(alertType), 3200);
-    }
+    // Repeat haptics until dismissed — CRITICAL sounds repeat faster
+    const pattern = HAPTIC_PATTERNS[alertType] ?? { count: 1, gap: 200 };
+    const patternDuration = pattern.count * pattern.gap + 200;
+    const repeatInterval = s.priority === 'CRITICAL'
+      ? patternDuration + 800   // short pause between repeats for critical
+      : patternDuration + 1500; // longer pause for non-critical
+    intervalRef.current = setInterval(() => triggerHaptics(alertType), repeatInterval);
     Animated.loop(Animated.sequence([
       Animated.timing(bgOpacity, { toValue: 0.85, duration: 700, useNativeDriver: true }),
       Animated.timing(bgOpacity, { toValue: 1,    duration: 700, useNativeDriver: true }),
@@ -641,7 +680,7 @@ export default function App() {
   const [tab, setTab] = useState('home');
   const [alertType, setAlertType] = useState(null);
   const [enabled, setEnabled] = useState({
-    smokeAlarm: true, doorbell: true, knocking: true, microwave: true, babyCrying: false,
+    smokeAlarm: true, doorbell: true, knocking: true, microwave: true, babyCrying: false, intruder: true,
   });
   const [sensitivity, setSensitivity] = useState('Medium');
   const [history, setHistory] = useState([]);
@@ -649,14 +688,65 @@ export default function App() {
   const [micGranted, setMicGranted] = useState(false);
   const [dbLevel, setDbLevel] = useState(-160);
 
-  const recordingRef = useRef(null);
   const cooldownRef  = useRef(false);
   const enabledRef   = useRef(enabled);
   const listeningRef = useRef(listening);
 
-  // Keep refs in sync so the recording status callback can read current values
   useEffect(() => { enabledRef.current = enabled; }, [enabled]);
   useEffect(() => { listeningRef.current = listening; }, [listening]);
+
+  // Check mic permission and re-check when app returns from Settings
+  const appStateRef = useRef(AppState.currentState);
+  const hasPromptedRef = useRef(false);
+
+  const checkMicPermission = useCallback(async (showAlert = false) => {
+    try {
+      const { status } = await getRecordingPermissionsAsync();
+      if (status === 'granted') {
+        setMicGranted(true);
+        return true;
+      } else if (status === 'undetermined') {
+        const { granted } = await requestRecordingPermissionsAsync();
+        if (granted) setMicGranted(true);
+        return granted;
+      } else if (showAlert && !hasPromptedRef.current) {
+        hasPromptedRef.current = true;
+        Alert.alert(
+          'Microphone Access Required',
+          'VibeCheck needs microphone access to detect sounds. Please enable it in Settings.',
+          [
+            { text: 'Cancel', style: 'cancel' },
+            { text: 'Open Settings', onPress: () => Linking.openSettings() },
+          ],
+        );
+      }
+      return false;
+    } catch (e) {
+      console.warn('Mic permission check:', e.message);
+      return false;
+    }
+  }, []);
+
+  // Initial permission check when entering main phase
+  useEffect(() => {
+    if (phase !== 'main' || micGranted) return;
+    checkMicPermission(true);
+  }, [phase, micGranted, checkMicPermission]);
+
+  // Re-check permission when app comes back to foreground (e.g. from Settings)
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (nextState) => {
+      if (appStateRef.current.match(/inactive|background/) && nextState === 'active') {
+        // App just came back to foreground — re-check mic permission
+        checkMicPermission(false);
+      }
+      appStateRef.current = nextState;
+    });
+    return () => sub.remove();
+  }, [checkMicPermission]);
+
+  const recordingRef = useRef(null);
+  const meteringInterval = useRef(null);
 
   const handleAlert = useCallback((id) => {
     setAlertType(id);
@@ -664,51 +754,104 @@ export default function App() {
   }, []);
 
   const handleDismiss = useCallback(() => {
-    Haptics.selectionAsync().catch(() => {});
+    Haptics.selectionAsync().catch(e => console.warn('Dismiss haptic:', e.message));
     setAlertType(null);
   }, []);
 
-  // Start / stop microphone when listening state or permission changes
+  // Start / stop recorder when listening state or permission changes
   useEffect(() => {
     if (phase !== 'main' || !micGranted) return;
 
     let cancelled = false;
 
-    const onStatus = (status) => {
-      if (!status.isRecording || cancelled) return;
-      const db = status.metering ?? -160;
-      setDbLevel(db);
+    async function startRecording() {
+      try {
+        // Stop any existing recording first
+        if (recordingRef.current) {
+          try { await recordingRef.current.stopAndUnloadAsync(); } catch (_) {}
+          recordingRef.current = null;
+        }
 
-      if (db > DETECTION_DB && !cooldownRef.current && listeningRef.current) {
-        const enabledList = Object.keys(enabledRef.current).filter(k => enabledRef.current[k]);
-        if (enabledList.length === 0) return;
-        // Pick a random enabled sound — in the final app the ML model picks this
-        const pick = enabledList[Math.floor(Math.random() * enabledList.length)];
-        cooldownRef.current = true;
-        setAlertType(pick);
-        setHistory(h => [...h, { type: pick, time: new Date() }]);
-        setTimeout(() => { cooldownRef.current = false; }, COOLDOWN_SEC * 1000);
+        await Audio.setAudioModeAsync({
+          allowsRecordingIOS: true,
+          playsInSilentModeIOS: true,
+        });
+
+        const { recording } = await Audio.Recording.createAsync(
+          {
+            isMeteringEnabled: true,
+            android: {
+              extension: '.m4a',
+              outputFormat: Audio.AndroidOutputFormat.MPEG_4,
+              audioEncoder: Audio.AndroidAudioEncoder.AAC,
+              sampleRate: 16000,
+              numberOfChannels: 1,
+              bitRate: 64000,
+            },
+            ios: {
+              extension: '.caf',
+              audioQuality: Audio.IOSAudioQuality.LOW,
+              sampleRate: 16000,
+              numberOfChannels: 1,
+              bitRate: 64000,
+              linearPCMBitDepth: 16,
+              linearPCMIsBigEndian: false,
+              linearPCMIsFloat: false,
+            },
+          },
+          (status) => {
+            // This callback fires every ~500ms with metering data
+            if (cancelled || !status.isRecording) return;
+            const db = status.metering ?? -160;
+            setDbLevel(db);
+
+            if (db > DETECTION_DB && !cooldownRef.current && listeningRef.current) {
+              const enabledList = Object.keys(enabledRef.current).filter(k => enabledRef.current[k]);
+              if (enabledList.length === 0) return;
+              const pick = enabledList[Math.floor(Math.random() * enabledList.length)];
+              cooldownRef.current = true;
+              setAlertType(pick);
+              setHistory(h => [...h, { type: pick, time: new Date() }]);
+              setTimeout(() => { cooldownRef.current = false; }, COOLDOWN_SEC * 1000);
+            }
+          },
+          300, // status update interval in ms
+        );
+
+        if (cancelled) {
+          await recording.stopAndUnloadAsync();
+          return;
+        }
+
+        recordingRef.current = recording;
+        _activeRecording = recording;
+        console.warn('Recording started successfully');
+      } catch (e) {
+        console.warn('Recording start failed:', e.message);
       }
-    };
+    }
+
+    async function stopRecording() {
+      if (recordingRef.current) {
+        try { await recordingRef.current.stopAndUnloadAsync(); } catch (_) {}
+        recordingRef.current = null;
+        _activeRecording = null;
+      }
+      setDbLevel(-160);
+    }
 
     if (listening) {
-      startRecording(onStatus).then(rec => {
-        if (!cancelled) recordingRef.current = rec;
-        else stopRecording(rec);
-      }).catch(e => console.warn('Recording start failed:', e));
+      startRecording();
     } else {
-      if (recordingRef.current) {
-        stopRecording(recordingRef.current);
-        recordingRef.current = null;
-        setDbLevel(-160);
-      }
+      stopRecording();
     }
 
     return () => {
       cancelled = true;
       if (recordingRef.current) {
-        stopRecording(recordingRef.current);
+        recordingRef.current.stopAndUnloadAsync().catch(() => {});
         recordingRef.current = null;
+        _activeRecording = null;
       }
     };
   }, [phase, micGranted, listening]);
