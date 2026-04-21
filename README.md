@@ -54,7 +54,9 @@ Customize vibration patterns
 🔒 Privacy-Focused
 Audio processed locally when possible
 No recordings stored without consent
-🧠 Architecture
+
+🧠 Architecture:
+![VibeCheck Architecture](assets/architecture-diagram.png)
 
 Flow:
 
