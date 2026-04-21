@@ -21,7 +21,7 @@ npm or yarn
 Expo CLI
 npm install -g expo-cli
 Installation
-git clone https://github.com/your-repo/vibesense.git
+git clone https://github.com/your-repo/vibecheck.git
 cd vibesense
 npm install
 Run the App
