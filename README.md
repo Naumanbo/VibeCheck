@@ -63,9 +63,6 @@ Existing solutions are fragmented. Platform features (Apple Sound Recognition, A
 
 ## ⚡ Quickstart
 
-> 🎞️ **[GIF PLACEHOLDER #1: `assets/quickstart.gif`]**
-> *A ~15–20 second screen recording of a Mac terminal + phone side-by-side showing: (1) `git clone` succeeding, (2) `cd VibeCheckApp && npm install` scrolling quickly, (3) `npx expo run:ios --device` booting, (4) the VibeCheck splash screen fading into the onboarding Welcome step on the iPhone. Captured at 1080p, exported at 720p 15fps to keep the file under 8 MB. Alt-text: "Terminal running git clone, npm install, and expo run:ios, followed by the VibeCheck app launching on an iPhone."*
-
 ### Prerequisites
 
 | Requirement        | Version      | Notes                                                                 |
@@ -198,8 +195,13 @@ VibeCheck ships with **two architecture diagrams** that together give you both t
 
 ### Example 1: Smoke alarm while cooking
 
-> 🎞️ **[GIF PLACEHOLDER #2: `assets/alert-detection.gif`]**
-> *A 10–12 second screen recording (phone screen mirrored via QuickTime) showing: the Home screen with the live dB meter quiet → a smoke-alarm clip plays from an off-screen Bluetooth speaker → the dB meter spikes red → within ~1–2 seconds the full-screen red Smoke Alarm takeover appears (🚨 emoji, "SMOKE ALARM" text, timestamp) while the phone vibrates audibly → user taps Dismiss → new entry appears at the top of "Recent detections." Annotate with a small "~1.6s end-to-end" caption near the alert. 720p, 15fps, target file size ≤ 6 MB. Alt-text: "iPhone screen showing VibeCheck detecting a smoke alarm and triggering a full-screen red alert with haptic vibration in under two seconds."*
+<p align="center">
+  <video src="assets/alert-detection.mov" controls width="92%">
+    Your browser does not support embedded video playback.
+  </video>
+</p>
+
+This video shows the live detection flow on the Home screen. The phone starts in a quiet listening state, a smoke-alarm clip is played nearby, the dB meter spikes as the sound crosses the threshold, and within about one to two seconds VibeCheck raises the full-screen Smoke Alarm alert with its critical repeating vibration pattern. After dismissal, the event appears in recent detections, demonstrating the end-to-end loop from acoustic event to logged alert.
 
 **What to notice**
 - The live dB meter flips red as soon as the acoustic event crosses the detection threshold.
@@ -209,8 +211,13 @@ VibeCheck ships with **two architecture diagrams** that together give you both t
 
 ### Example 2: Customizing which sounds to monitor
 
-> 🎞️ **[GIF PLACEHOLDER #3: `assets/customization.gif`]**
-> *An 8–10 second clip of the Preferences tab. Show the user: (1) toggling off Microwave, (2) toggling on Thunder, (3) tapping "Test Vibration" on the Doorbell row and the phone vibrating, (4) changing sensitivity from Medium to Low. Alt-text: "VibeCheck Preferences screen, user toggles categories on and off, previews a haptic pattern, and changes the sensitivity setting."*
+<p align="center">
+  <video src="assets/customization.mov" controls width="92%">
+    Your browser does not support embedded video playback.
+  </video>
+</p>
+
+This video walks through the Preferences tab, where the user turns categories on and off, previews a built-in haptic pattern, and changes sensitivity. It shows that VibeCheck is not locked to a fixed sound set: users can tailor monitoring to their own environment, reduce noise from irrelevant categories, and test the exact vibration patterns they will rely on before an alert ever fires.
 
 **Code-level behavior.** Preferences are persisted via `AsyncStorage`, keyed by category ID:
 
@@ -229,6 +236,12 @@ await AsyncStorage.setItem(
 On the next app launch, preferences hydrate before the microphone starts listening, so a user's settings survive reboots, app updates, and even device migration (via iCloud app data backup).
 
 ### Example 3: Manually triggering an alert (for demos or practice)
+
+<p align="center">
+  <video src="assets/manual-trigger.mov" controls width="92%">
+    Your browser does not support embedded video playback.
+  </video>
+</p>
 
 Every sound tile on the Home screen doubles as a manual trigger for demo and testing purposes. Tap any tile to fire the alert UI and haptic without needing a real acoustic event. Useful when you want to teach a new user which vibration pattern means which sound.
 
@@ -255,17 +268,17 @@ Additional categories in the label map (intruder sounds, dog bark, cat meow, gun
 
 ---
 
-## 🎬 Demo GIFs
+## 🎬 Demo Videos
 
-All GIFs live under [`assets/`](assets/). Placeholders above describe exactly what each recording should show. The minimum set is three:
+The demo recordings live under [`assets/`](assets/) and are embedded directly in the usage examples above:
 
-| File                          | Purpose                                        | Target length | Appears in         |
-| ----------------------------- | ---------------------------------------------- | ------------- | ------------------ |
-| `assets/quickstart.gif`       | Terminal install + first launch                | 15–20 s       | Quickstart         |
-| `assets/alert-detection.gif`  | Live smoke-alarm detection + haptic            | 10–12 s       | Usage Example 1    |
-| `assets/customization.gif`    | Preferences: toggles, test vibration, slider   | 8–10 s        | Usage Example 2    |
+| File                         | Purpose                                      | Appears in         |
+| ---------------------------- | -------------------------------------------- | ------------------ |
+| `assets/alert-detection.mov` | Live smoke-alarm detection and alert flow    | Usage Example 1    |
+| `assets/customization.mov`   | Preferences toggles, vibration preview, sensitivity | Usage Example 2    |
+| `assets/manual-trigger.mov`  | Manual alert triggering for demos or practice | Usage Example 3    |
 
-**How to record them.** Use QuickTime on macOS with "New Movie Recording" set to the iPhone as both video and audio source (works over USB-C). Trim and crop in Premiere Pro or iMovie, then export as GIF via [Gifski](https://gif.ski/) for the best size-to-quality ratio. Target ≤ 8 MB per GIF so they load quickly on GitHub.
+These clips were recorded from the real app so the README shows the shipped interface and interaction flow rather than static mockups.
 
 ---
 
