@@ -52,7 +52,6 @@ Existing solutions are fragmented. Platform features (Apple Sound Recognition, A
   - [Diagram 2: Runtime Sequence (Per-Alert Data Flow)](#diagram-2-runtime-sequence-per-alert-data-flow)
 - [Usage Examples](#-usage-examples)
 - [Supported Sound Categories](#-supported-sound-categories)
-- [Demo GIFs](#-demo-gifs)
 - [Dependencies](#-dependencies)
 - [FAQ](#-faq)
 - [Contributing](#-contributing)
@@ -84,7 +83,7 @@ brew install git-lfs
 git lfs install
 
 # 2. Clone the repo
-git clone https://github.com/<your-org>/VibeCheck.git
+git clone https://github.com/Naumanbo/VibeCheck.git
 cd VibeCheck/VibeCheckApp
 
 # 3. Verify the Core ML weights downloaded as a real binary, not an LFS pointer stub
@@ -203,7 +202,7 @@ VibeCheck ships with **two architecture diagrams** that together give you both t
   </a>
 </p>
 
-This video shows the live detection flow on the Home screen. The phone starts in a quiet listening state, a smoke-alarm clip is played nearby, the dB meter spikes as the sound crosses the threshold, and within about one to two seconds VibeCheck raises the full-screen Smoke Alarm alert with its critical repeating vibration pattern. After dismissal, the event appears in recent detections, demonstrating the end-to-end loop from acoustic event to logged alert.
+This example shows the live detection flow on the Home screen. The phone starts in a quiet listening state, a smoke-alarm clip is played nearby, the dB meter spikes as the sound crosses the threshold, and within about one to two seconds VibeCheck raises the full-screen Smoke Alarm alert with its critical repeating vibration pattern. After dismissal, the event appears in recent detections, demonstrating the end-to-end loop from acoustic event to logged alert.
 
 **What to notice**
 - The live dB meter flips red as soon as the acoustic event crosses the detection threshold.
@@ -219,7 +218,7 @@ This video shows the live detection flow on the Home screen. The phone starts in
   </a>
 </p>
 
-This video walks through the Preferences tab, where the user turns categories on and off, previews a built-in haptic pattern, and changes sensitivity. It shows that VibeCheck is not locked to a fixed sound set: users can tailor monitoring to their own environment, reduce noise from irrelevant categories, and test the exact vibration patterns they will rely on before an alert ever fires.
+This example walks through the Preferences tab, where the user turns categories on and off, previews a built-in haptic pattern, and changes sensitivity. It shows that VibeCheck is not locked to a fixed sound set: users can tailor monitoring to their own environment, reduce noise from irrelevant categories, and test the exact vibration patterns they will rely on before an alert ever fires.
 
 **Code-level behavior.** Preferences are persisted via `AsyncStorage`, keyed by category ID:
 
@@ -267,20 +266,6 @@ Every sound tile on the Home screen doubles as a manual trigger for demo and tes
 | 😂 Laughter          | Low      | OFF     | Social awareness (opt-in)                          |
 
 Additional categories in the label map (intruder sounds, dog bark, cat meow, gunshot, shouting) are gated behind opt-in toggles for advanced users.
-
----
-
-## 🎬 Demo Media
-
-The demo assets live under [`assets/`](assets/). Each example uses a GIF preview in the README that links to the matching `.mp4` file for the full version with audio:
-
-| GIF Preview                    | Video Link                     | Purpose                                      | Appears in         |
-| ----------------------------- | ------------------------------ | -------------------------------------------- | ------------------ |
-| `assets/alert-detection.gif`  | `assets/alert-detection.mp4`   | Live smoke-alarm detection and alert flow    | Usage Example 1    |
-| `assets/customization.gif`    | `assets/customization.mp4`     | Preferences toggles, vibration preview, sensitivity | Usage Example 2    |
-| `assets/manual-trigger.gif`   | `assets/manual-trigger.mp4`    | Manual alert triggering for demos or practice | Usage Example 3    |
-
-This keeps the README GitHub-friendly while still giving readers access to the original recordings when audio matters.
 
 ---
 
