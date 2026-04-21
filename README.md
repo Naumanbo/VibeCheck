@@ -1,3 +1,5 @@
+![VibeSense Banner](assets/banner.png)
+
 📌 Overview
 
 VibeSense is a mobile application designed to help individuals who are hard of hearing detect important environmental sounds using vibration feedback. The app uses machine learning to recognize sounds like alarms, sirens, doorbells, and speech, and translates them into distinct vibration patterns.
