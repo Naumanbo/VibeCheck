@@ -436,7 +436,7 @@ Contributions are welcome. A few ways to help:
 
 ```bash
 # fork the repo, then:
-git clone https://github.com/<your-username>/VibeCheck.git
+git clone https://github.com/Naumanbo/VibeCheck.git
 cd VibeCheck/VibeCheckApp
 git checkout -b feat/your-feature-name
 
