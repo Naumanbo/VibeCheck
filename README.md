@@ -193,13 +193,13 @@ VibeCheck ships with **two architecture diagrams** that together give you both t
 
 ## 📱 Usage Examples
 
-> **Tip:** Click any GIF below to open the corresponding `.mov` recording. The video versions include audio, which adds useful context for the alert and customization demos.
+> **Tip:** Click any GIF below to open the corresponding `.mp4` recording. The video versions include audio, which adds useful context for the alert and customization demos.
 
 ### Example 1: Smoke alarm while cooking
 
 <p align="center">
-  <a href="assets/alert-detection.mov">
-    <img src="assets/alert-detection.gif" alt="Animated preview of VibeCheck detecting a smoke alarm, raising a full-screen alert, and logging the event. Click to open the video with audio." width="92%" />
+  <a href="assets/alert-detection.mp4">
+    <img src="assets/alert-detection.gif" alt="Animated preview of VibeCheck detecting a smoke alarm, raising a full-screen alert, and logging the event. Click to open the video with audio." width="72%" />
   </a>
 </p>
 
@@ -214,8 +214,8 @@ This video shows the live detection flow on the Home screen. The phone starts in
 ### Example 2: Customizing which sounds to monitor
 
 <p align="center">
-  <a href="assets/customization.mov">
-    <img src="assets/customization.gif" alt="Animated preview of the Preferences screen, with category toggles, vibration preview, and sensitivity changes. Click to open the video with audio." width="92%" />
+  <a href="assets/customization.mp4">
+    <img src="assets/customization.gif" alt="Animated preview of the Preferences screen, with category toggles, vibration preview, and sensitivity changes. Click to open the video with audio." width="72%" />
   </a>
 </p>
 
@@ -240,8 +240,8 @@ On the next app launch, preferences hydrate before the microphone starts listeni
 ### Example 3: Manually triggering an alert (for demos or practice)
 
 <p align="center">
-  <a href="assets/manual-trigger.mov">
-    <img src="assets/manual-trigger.gif" alt="Animated preview of manually triggering a VibeCheck alert from a sound tile on the Home screen. Click to open the video with audio." width="92%" />
+  <a href="assets/manual-trigger.mp4">
+    <img src="assets/manual-trigger.gif" alt="Animated preview of manually triggering a VibeCheck alert from a sound tile on the Home screen. Click to open the video with audio." width="72%" />
   </a>
 </p>
 
@@ -272,13 +272,13 @@ Additional categories in the label map (intruder sounds, dog bark, cat meow, gun
 
 ## 🎬 Demo Media
 
-The demo assets live under [`assets/`](assets/). Each example uses a GIF preview in the README that links to the matching `.mov` file for the full version with audio:
+The demo assets live under [`assets/`](assets/). Each example uses a GIF preview in the README that links to the matching `.mp4` file for the full version with audio:
 
 | GIF Preview                    | Video Link                     | Purpose                                      | Appears in         |
 | ----------------------------- | ------------------------------ | -------------------------------------------- | ------------------ |
-| `assets/alert-detection.gif`  | `assets/alert-detection.mov`   | Live smoke-alarm detection and alert flow    | Usage Example 1    |
-| `assets/customization.gif`    | `assets/customization.mov`     | Preferences toggles, vibration preview, sensitivity | Usage Example 2    |
-| `assets/manual-trigger.gif`   | `assets/manual-trigger.mov`    | Manual alert triggering for demos or practice | Usage Example 3    |
+| `assets/alert-detection.gif`  | `assets/alert-detection.mp4`   | Live smoke-alarm detection and alert flow    | Usage Example 1    |
+| `assets/customization.gif`    | `assets/customization.mp4`     | Preferences toggles, vibration preview, sensitivity | Usage Example 2    |
+| `assets/manual-trigger.gif`   | `assets/manual-trigger.mp4`    | Manual alert triggering for demos or practice | Usage Example 3    |
 
 This keeps the README GitHub-friendly while still giving readers access to the original recordings when audio matters.
 
