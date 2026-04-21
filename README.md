@@ -193,12 +193,14 @@ VibeCheck ships with **two architecture diagrams** that together give you both t
 
 ## 📱 Usage Examples
 
+> **Tip:** Click any GIF below to open the corresponding `.mov` recording. The video versions include audio, which adds useful context for the alert and customization demos.
+
 ### Example 1: Smoke alarm while cooking
 
 <p align="center">
-  <video src="assets/alert-detection.mov" controls width="92%">
-    Your browser does not support embedded video playback.
-  </video>
+  <a href="assets/alert-detection.mov">
+    <img src="assets/alert-detection.gif" alt="Animated preview of VibeCheck detecting a smoke alarm, raising a full-screen alert, and logging the event. Click to open the video with audio." width="92%" />
+  </a>
 </p>
 
 This video shows the live detection flow on the Home screen. The phone starts in a quiet listening state, a smoke-alarm clip is played nearby, the dB meter spikes as the sound crosses the threshold, and within about one to two seconds VibeCheck raises the full-screen Smoke Alarm alert with its critical repeating vibration pattern. After dismissal, the event appears in recent detections, demonstrating the end-to-end loop from acoustic event to logged alert.
@@ -212,9 +214,9 @@ This video shows the live detection flow on the Home screen. The phone starts in
 ### Example 2: Customizing which sounds to monitor
 
 <p align="center">
-  <video src="assets/customization.mov" controls width="92%">
-    Your browser does not support embedded video playback.
-  </video>
+  <a href="assets/customization.mov">
+    <img src="assets/customization.gif" alt="Animated preview of the Preferences screen, with category toggles, vibration preview, and sensitivity changes. Click to open the video with audio." width="92%" />
+  </a>
 </p>
 
 This video walks through the Preferences tab, where the user turns categories on and off, previews a built-in haptic pattern, and changes sensitivity. It shows that VibeCheck is not locked to a fixed sound set: users can tailor monitoring to their own environment, reduce noise from irrelevant categories, and test the exact vibration patterns they will rely on before an alert ever fires.
@@ -238,9 +240,9 @@ On the next app launch, preferences hydrate before the microphone starts listeni
 ### Example 3: Manually triggering an alert (for demos or practice)
 
 <p align="center">
-  <video src="assets/manual-trigger.mov" controls width="92%">
-    Your browser does not support embedded video playback.
-  </video>
+  <a href="assets/manual-trigger.mov">
+    <img src="assets/manual-trigger.gif" alt="Animated preview of manually triggering a VibeCheck alert from a sound tile on the Home screen. Click to open the video with audio." width="92%" />
+  </a>
 </p>
 
 Every sound tile on the Home screen doubles as a manual trigger for demo and testing purposes. Tap any tile to fire the alert UI and haptic without needing a real acoustic event. Useful when you want to teach a new user which vibration pattern means which sound.
@@ -268,17 +270,17 @@ Additional categories in the label map (intruder sounds, dog bark, cat meow, gun
 
 ---
 
-## 🎬 Demo Videos
+## 🎬 Demo Media
 
-The demo recordings live under [`assets/`](assets/) and are embedded directly in the usage examples above:
+The demo assets live under [`assets/`](assets/). Each example uses a GIF preview in the README that links to the matching `.mov` file for the full version with audio:
 
-| File                         | Purpose                                      | Appears in         |
-| ---------------------------- | -------------------------------------------- | ------------------ |
-| `assets/alert-detection.mov` | Live smoke-alarm detection and alert flow    | Usage Example 1    |
-| `assets/customization.mov`   | Preferences toggles, vibration preview, sensitivity | Usage Example 2    |
-| `assets/manual-trigger.mov`  | Manual alert triggering for demos or practice | Usage Example 3    |
+| GIF Preview                    | Video Link                     | Purpose                                      | Appears in         |
+| ----------------------------- | ------------------------------ | -------------------------------------------- | ------------------ |
+| `assets/alert-detection.gif`  | `assets/alert-detection.mov`   | Live smoke-alarm detection and alert flow    | Usage Example 1    |
+| `assets/customization.gif`    | `assets/customization.mov`     | Preferences toggles, vibration preview, sensitivity | Usage Example 2    |
+| `assets/manual-trigger.gif`   | `assets/manual-trigger.mov`    | Manual alert triggering for demos or practice | Usage Example 3    |
 
-These clips were recorded from the real app so the README shows the shipped interface and interaction flow rather than static mockups.
+This keeps the README GitHub-friendly while still giving readers access to the original recordings when audio matters.
 
 ---
 
