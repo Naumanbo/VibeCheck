@@ -176,70 +176,21 @@ VibeCheck ships with **two architecture diagrams** that together give you both t
 
 ### Diagram 2: Runtime Sequence (Per-Alert Data Flow)
 
-> 🖼️ **[DIAGRAM PLACEHOLDER #2: `assets/architecture-sequence.png`]**
->
-> **What this diagram should be.** A UML-style **sequence diagram** that complements Diagram 1 by showing the precise runtime interactions between layers for **a single alert event**, from acoustic onset to haptic output. Where Diagram 1 is a static product view, Diagram 2 is a dynamic engineering view that makes the 2-second latency budget visible.
->
-> **How to build it.** Use [Excalidraw](https://excalidraw.com/), [Mermaid](https://mermaid.js.org/syntax/sequenceDiagram.html), or [Lucidchart](https://www.lucidchart.com/). A Mermaid starter is embedded below so the diagram renders inline on GitHub; export a PNG version too for the image placeholder.
->
-> **Swim-lanes / participants (left → right):**
-> 1. **User's Environment**: emits the acoustic event (e.g., smoke alarm chirp).
-> 2. **iOS Microphone**: hardware layer, samples at 16 kHz.
-> 3. **`expo-av` (JS)**: opens the recorder, emits buffer and metering callbacks.
-> 4. **`App.js` (React Native)**: holds the rolling buffer, the dB gate, and the call site for classification.
-> 5. **`SoundClassifierBridge.m` / `SoundClassifier.swift`**: the native iOS module that receives buffers from JS and invokes Core ML.
-> 6. **`ASTClassifier.mlpackage` (Core ML)**: the on-device Neural-Engine inference target.
-> 7. **Post-processing (`App.js`)**: label map, aggregation, calibration, per-category gates.
-> 8. **Haptic Engine (`expo-haptics`) + UI (Alert Modal)**: the output layer.
->
-> **Required messages / arrows (top → bottom):**
->
-> | # | From → To | Message | Annotation |
-> |---|-----------|---------|------------|
-> | 1 | Environment → Microphone | acoustic event | t = 0 |
-> | 2 | Microphone → expo-av | PCM samples (16 kHz) | streaming |
-> | 3 | expo-av → App.js | `onStatusUpdate(metering)` | ~every 100 ms |
-> | 4 | App.js → App.js | append to rolling buffer, compute peak dB, sustained-loud count | |
-> | 5 | App.js → Bridge | `classifyBuffer(buffer)` | only fires when loudness gate clears |
-> | 6 | Bridge → SoundClassifier.swift | forward as `Float32` array | |
-> | 7 | SoundClassifier → Core ML | `prediction(input: spectrogramInput)` | Neural Engine executes AST |
-> | 8 | Core ML → SoundClassifier | 527-class logit vector | ~200–400 ms wall time |
-> | 9 | SoundClassifier → Bridge → App.js | top-K labels + scores (JSON-serializable) | |
-> | 10 | App.js → App.js | label-map lookup, score aggregation, calibration, dual-gate check | |
-> | 11 | App.js → Haptic Engine | `triggerHaptics(category, pattern)` | if gate passes |
-> | 12 | App.js → UI | `setAlertType(category)` → full-screen overlay renders | same frame |
-> | 13 | UI → User | high-contrast visual + vibration pattern | t ≤ 2 s (R1 target) |
->
-> **Visual requirements:** vertical lifelines for all 8 participants, horizontal arrows for each message, dashed return arrows for synchronous replies (steps 8 and 9), time annotations on the right-hand edge at steps 1, 7, 9, and 13. Use consistent colors from the brand palette (teal #26C6DA for data, violet #8A2BE2 for ML, amber #FFB300 for control).
->
-> **Why a second diagram?** The conceptual diagram hides *where the latency budget is spent* and *which layer enforces privacy*. The sequence diagram answers both: it makes the ~200–400 ms ML step visible, shows that the Core ML call is the only compute-heavy step, and proves visually that no arrow ever leaves the device boundary.
+<p align="center">
+  <img src="assets/architecture-sequence.png" alt="VibeCheck runtime sequence diagram. Eight columns show the path of one alert: User's Environment, iOS Microphone, Expo AV, App.js, the native iOS bridge, the Core ML AST model, the Expo Haptics engine, and the UI alert modal. The arrows trace acoustic input into the mic, metering and gating in App.js, a handoff into the native classifier, Core ML inference, post-processing back in JavaScript, and then category-specific haptics plus a full-screen alert, all with latency annotations and on-device privacy callouts." width="96%" />
+</p>
 
-A quick Mermaid version that renders inline on GitHub while the full designed PNG is being authored:
+**What this diagram shows.** This is the **runtime implementation view** of VibeCheck, a code-level picture of what happens during one alert from the moment a real-world sound occurs to the moment the phone vibrates and shows the takeover screen. Unlike Diagram 1, which is deliberately conceptual, this diagram is tied to the actual iOS build described in the URD and demo materials: `expo-av` captures audio, `App.js` manages the detection loop and gating logic, the native `SoundClassifier` module invokes the bundled AST Core ML model, and the React Native UI renders the alert.
 
-```mermaid
-sequenceDiagram
-    autonumber
-    participant ENV as 🔔 Environment
-    participant MIC as 🎙️ iOS Mic
-    participant AV as expo-av
-    participant APP as App.js (RN)
-    participant BR as Swift Bridge
-    participant ML as Core ML (AST)
-    participant HAP as Haptics + UI
+**Reading guide (left → right, top → bottom).**
 
-    ENV->>MIC: Acoustic event (t=0)
-    MIC-->>AV: PCM samples @ 16 kHz
-    AV-->>APP: onStatusUpdate(peakDb)
-    Note over APP: Loudness gate:<br/>sustained peak ≥ −35 dB?
-    APP->>BR: classifyBuffer(buffer)
-    BR->>ML: prediction(input)
-    ML-->>BR: 527-class logits
-    BR-->>APP: top-K labels + scores
-    Note over APP: Label map →<br/>aggregate →<br/>calibrate →<br/>per-category gate
-    APP->>HAP: triggerHaptics(category)
-    APP->>HAP: setAlertType(category)
-    HAP-->>ENV: Vibration + visual alert<br/>(t ≤ 2 s)
-```
+1. **Environment and capture.** The event begins outside the device, such as a smoke alarm chirp, a knock, or a baby crying. The iPhone microphone samples at 16 kHz and feeds audio into `expo-av`, which also emits metering callbacks on roughly a 100 ms cadence. Those callbacks drive the live dB display and give the app the fast signal it needs to decide when a sound is worth classifying.
+2. **React Native control loop.** `App.js` is the orchestration layer. It tracks the rolling detection window, peak dB, and sustained-loud count, then decides when to invoke the classifier. The diagram draws this as a JS-to-native handoff at the classification boundary. In the shipped implementation, that boundary is reached after the current recording window is stopped and handed to `NativeModules.SoundClassifier.classifyFile(...)`, which plays the same architectural role as the "classify buffer" step shown in the sequence.
+3. **Native bridge and Core ML inference.** The bridge layer is `SoundClassifierBridge.m` plus `SoundClassifier.swift` in `ios/VibeCheckNative/`. Swift loads the bundled `ASTClassifier.mlpackage`, converts the recorded audio to 16 kHz mono `Float32`, trims to the most recent real audio, pads to the AST input size, and runs inference entirely on-device. The model returns AudioSet logits, which the native module turns into top-ranked labels and scores before resolving back to JavaScript.
+4. **Post-processing and alert output.** Once scores come back to `App.js`, the app performs the product-specific logic that turns raw AudioSet output into a user-facing alert: label-map lookup, score aggregation, generic-label routing, confidence calibration, silence override handling, sensitivity-aware gating, and final category selection. If the event clears the dual gates, the app triggers the category's haptic pattern through `expo-haptics` and sets the full-screen alert modal in the same React Native frame. That is also the stage where VibeCheck's event history, false-positive tuning, and unknown-sound reclassification flows connect back into the runtime.
+5. **Timing and guarantees.** The right edge of the diagram makes the project's core requirements visible. The heaviest step is the Core ML inference lane, typically around 200 to 400 ms, while the overall path is budgeted to stay within the R1 target of 2.0 seconds from sound onset to delivered alert. The bottom panels reinforce the other non-negotiable architectural constraints from the project docs: all processing stays on-device, no audio or model output leaves the phone, and the system's value comes from turning that private local inference into immediate haptics and accessible visual feedback.
+
+**How to use this diagram.** Use this view when you want to understand *when* something happens, *where latency is spent*, and *which layer owns a bug or design decision*. If the issue is metering or thresholding, start in `App.js`; if it is model loading or inference behavior, look in `ios/VibeCheckNative/`; if it is haptic delivery or alert presentation, follow the final handoff into Expo Haptics and the alert modal. Together, Diagram 1 and Diagram 2 give you both the product architecture and the real runtime path that implements it.
 
 ---
 
