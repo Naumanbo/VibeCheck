@@ -1,4 +1,4 @@
-![VibeSense Banner](assets/project-banner.png)
+![VibeSense Banner](assets/banner.png)
 
 📌 Overview
 
