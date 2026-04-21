@@ -13,11 +13,13 @@
     },
     "ios": {
       "supportsTablet": true,
+      "bundleIdentifier": "com.vibecheck.app",
       "infoPlist": {
         "NSMicrophoneUsageDescription": "VibeCheck needs microphone access to detect environmental sounds in real time. All audio is processed on-device and never transmitted."
       }
     },
     "android": {
+      "package": "com.vibecheck.app",
       "permissions": [
         "RECORD_AUDIO"
       ],

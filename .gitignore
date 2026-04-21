@@ -37,5 +37,15 @@ yarn-error.*
 *.tsbuildinfo
 
 # generated native folders
-/ios
 /android
+
+# iOS — keep the project + custom VibeCheckNative module (on-device ML model
+# lives here and is required for a fresh build). Ignore only the regenerated
+# artifacts so `pod install` + Xcode can rebuild them on a new machine.
+ios/Pods/
+ios/build/
+ios/DerivedData/
+ios/*.xcworkspace/xcuserdata/
+ios/*.xcodeproj/xcuserdata/
+ios/*.xcodeproj/project.xcworkspace/xcuserdata/
+ios/.xcode.env.local
