@@ -2,7 +2,7 @@
 
 📌 Overview
 
-VibeSense is a mobile application designed to help individuals who are hard of hearing detect important environmental sounds using vibration feedback. The app uses machine learning to recognize sounds like alarms, sirens, doorbells, and speech, and translates them into distinct vibration patterns.
+VibeCheck is a mobile application designed to help individuals who are hard of hearing detect important environmental sounds using vibration feedback. The app uses machine learning to recognize sounds like alarms, sirens, doorbells, and speech, and translates them into distinct vibration patterns.
 
 This allows users to stay aware of their surroundings without relying on sound, improving both safety and independence.
 
@@ -24,7 +24,7 @@ Expo CLI
 npm install -g expo-cli
 Installation
 git clone https://github.com/your-repo/vibecheck.git
-cd vibesense
+cd vibecheck
 npm install
 Run the App
 npx expo start
