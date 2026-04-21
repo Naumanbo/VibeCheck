@@ -1,6 +1,6 @@
 <!-- Banner -->
 <p align="center">
-  <img src="assets/banner.png" alt="VibeCheck — Sound Awareness. Vibration Alerts. Greater Independence. Banner showing an ear icon, the VibeCheck wordmark, an iPhone on a Listening screen, and a smartwatch emitting vibration waves." width="100%" />
+  <img src="assets/banner.png" alt="VibeCheck: Sound Awareness. Vibration Alerts. Greater Independence. Banner showing an ear icon, the VibeCheck wordmark, an iPhone on a Listening screen, and a smartwatch emitting vibration waves." width="100%" />
 </p>
 
 <h1 align="center">VibeCheck</h1>
@@ -26,14 +26,14 @@
 
 ## 📌 Overview
 
-**VibeCheck** is a mobile application that helps individuals who are Deaf or Hard-of-Hearing (DHH) stay aware of critical sounds in their environment — smoke alarms, doorbells, knocking, baby crying, sirens, appliance alerts, and more — by translating them into **distinct vibration patterns** and **high-contrast visual alerts**.
+**VibeCheck** is a mobile application that helps individuals who are Deaf or Hard-of-Hearing (DHH) stay aware of critical sounds in their environment, including smoke alarms, doorbells, knocking, baby crying, sirens, appliance alerts, and more, by translating them into **distinct vibration patterns** and **high-contrast visual alerts**.
 
 All classification happens **entirely on-device** using a Core ML build of the [Audio Spectrogram Transformer (AST)](https://huggingface.co/MIT/ast-finetuned-audioset-10-10-0.4593) fine-tuned on Google's AudioSet (527 classes). Nothing leaves your phone. No account. No cloud. No recording to disk.
 
 ### Who is this for?
 
 - 🦻 **DHH users** who want safety alerts that travel with them (home, work, travel) without dedicated hardware like bed-shakers or strobe boxes.
-- 🎧 **Situationally impaired users** — factory workers in hearing protection, commuters with noise-cancelling headphones, new parents trying to sleep through everything *except* the baby.
+- 🎧 **Situationally impaired users**: factory workers in hearing protection, commuters with noise-cancelling headphones, and new parents trying to sleep through everything *except* the baby.
 - 🧑‍💻 **Researchers and accessibility developers** interested in an open reference implementation of an on-device audio-classification assistive app.
 
 ### Why it exists
@@ -48,8 +48,8 @@ Existing solutions are fragmented. Platform features (Apple Sound Recognition, A
 - [Quickstart](#-quickstart)
 - [Features](#-features)
 - [Architecture](#-architecture)
-  - [Diagram 1 — System Architecture (Conceptual)](#diagram-1--system-architecture-conceptual)
-  - [Diagram 2 — Runtime Sequence (Per-Alert Data Flow)](#diagram-2--runtime-sequence-per-alert-data-flow)
+  - [Diagram 1: System Architecture (Conceptual)](#diagram-1-system-architecture-conceptual)
+  - [Diagram 2: Runtime Sequence (Per-Alert Data Flow)](#diagram-2-runtime-sequence-per-alert-data-flow)
 - [Usage Examples](#-usage-examples)
 - [Supported Sound Categories](#-supported-sound-categories)
 - [Demo GIFs](#-demo-gifs)
@@ -63,7 +63,7 @@ Existing solutions are fragmented. Platform features (Apple Sound Recognition, A
 
 ## ⚡ Quickstart
 
-> 🎞️ **[GIF PLACEHOLDER #1 — `assets/quickstart.gif`]**
+> 🎞️ **[GIF PLACEHOLDER #1: `assets/quickstart.gif`]**
 > *A ~15–20 second screen recording of a Mac terminal + phone side-by-side showing: (1) `git clone` succeeding, (2) `cd VibeCheckApp && npm install` scrolling quickly, (3) `npx expo run:ios --device` booting, (4) the VibeCheck splash screen fading into the onboarding Welcome step on the iPhone. Captured at 1080p, exported at 720p 15fps to keep the file under 8 MB. Alt-text: "Terminal running git clone, npm install, and expo run:ios, followed by the VibeCheck app launching on an iPhone."*
 
 ### Prerequisites
@@ -76,7 +76,7 @@ Existing solutions are fragmented. Platform features (Apple Sound Recognition, A
 | npm                | 9+           | Ships with Node                                                       |
 | Expo CLI           | latest       | `npm install -g expo-cli` (optional; `npx expo` works without it)     |
 | CocoaPods          | 1.15+        | `sudo gem install cocoapods`                                          |
-| **Git LFS**        | 3.x          | **Required** — the 166 MB Core ML model is stored via LFS             |
+| **Git LFS**        | 3.x          | **Required**: the 166 MB Core ML model is stored via LFS              |
 | iPhone (recommended) | iOS 15+    | Microphone access + haptics are limited on the simulator              |
 
 ### Installation
@@ -121,12 +121,12 @@ npx expo run:ios                 # iOS simulator (mic access is limited)
 A native Swift module wraps a **166 MB Core ML build of AST** (Audio Spectrogram Transformer, 527-class AudioSet). Audio buffers from `expo-av` are passed to Core ML and scored against a label map that aggregates the 527 raw classes into 12 user-facing categories. Inference runs on Apple's Neural Engine; typical end-to-end latency (sound onset → full-screen alert) is **well under 2 seconds**.
 
 ### 📳 Distinct haptic patterns per category
-Each sound category maps to a **unique Tacton-inspired vibration pattern** — varying in pulse count, duration, and inter-pulse gap — designed so users can identify the alert type from the vibration alone. For example, the smoke-alarm pattern is rapid long bursts that auto-repeat; doorbell is two medium pulses; knocking is three short taps.
+Each sound category maps to a **unique Tacton-inspired vibration pattern** that varies in pulse count, duration, and inter-pulse gap, so users can identify the alert type from the vibration alone. For example, the smoke-alarm pattern is rapid long bursts that auto-repeat; doorbell is two medium pulses; knocking is three short taps.
 
 ### 🎯 Accurate detection with dual gating
 To suppress false positives, every candidate alert must clear **two independent gates**:
-- **Loudness gate** — peak dB + sustained-sample count above threshold, so background TV audio doesn't trigger alerts.
-- **Confidence gate** — calibrated Core ML score ≥ per-category minimum (0.70 global default, looser for diffuse sounds like thunder).
+- **Loudness gate**: peak dB + sustained-sample count above threshold, so background TV audio doesn't trigger alerts.
+- **Confidence gate**: calibrated Core ML score ≥ per-category minimum (0.70 global default, looser for diffuse sounds like thunder).
 
 ### 🧠 Smart silence handling
 AST's "Silence" class is broad and often ranks #1 even during real events in quiet rooms. VibeCheck's **lenient silence override** checks the runner-up category and, if the environment is acoustically loud and the #2 is a meaningful non-silence class, fires the alert anyway.
@@ -134,7 +134,7 @@ AST's "Silence" class is broad and often ranks #1 even during real events in qui
 ### ⚙️ Full user configurability
 - Enable or disable any of the 12 sound categories independently.
 - Preview haptic patterns per category with a "Test Vibration" button.
-- Adjust detection sensitivity (Low / Medium / High) — each maps to a different dB threshold.
+- Adjust detection sensitivity (Low / Medium / High); each maps to a different dB threshold.
 - All preferences persist across app launches via `AsyncStorage`.
 
 ### 🔐 Privacy-first by architecture
@@ -154,43 +154,43 @@ All alert screens use dark backgrounds with high-contrast accent colors paired w
 
 VibeCheck ships with **two architecture diagrams** that together give you both the high-level product view and the runtime implementation view.
 
-### Diagram 1 — System Architecture (Conceptual)
+### Diagram 1: System Architecture (Conceptual)
 
 <p align="center">
-  <img src="assets/architecture-diagram.png" alt="VibeCheck system architecture diagram. Top row: five numbered pipeline stages — 1) Audio Capture (microphone), 2) Audio Processing (noise reduction, framing, MFCC/Log-Mel feature extraction), 3) Sound Classification (on-device ML model), 4) Alert Mapping (alarms, sirens, doorbells, speech), 5) Vibration Output (phone and wearable haptic feedback). A Tech Stack panel on the right lists React Native (Expo), TensorFlow Lite / YAMNet, Expo AV, Expo Haptics, and AsyncStorage. Middle row: Supporting Services panel showing Settings and Customization, Local Storage, Privacy and Security, and optional Analytics. Bottom row: a simplified System Flow Overview — Ambient Sound to Audio Processing to ML Classification to Sound Category to Vibration Alert. A legend explains solid green arrows as Data/Audio Flow, dashed orange as Control/Mapping Flow, and dashed blue as Service Interaction." width="90%" />
+  <img src="assets/architecture-diagram.png" alt="VibeCheck system architecture diagram. Top row: five numbered pipeline stages: 1) Audio Capture (microphone), 2) Audio Processing (noise reduction, framing, MFCC/Log-Mel feature extraction), 3) Sound Classification (on-device ML model), 4) Alert Mapping (alarms, sirens, doorbells, speech), 5) Vibration Output (phone and wearable haptic feedback). A Tech Stack panel on the right lists React Native (Expo), TensorFlow Lite / YAMNet, Expo AV, Expo Haptics, and AsyncStorage. Middle row: Supporting Services panel showing Settings and Customization, Local Storage, Privacy and Security, and optional Analytics. Bottom row: a simplified System Flow Overview, Ambient Sound to Audio Processing to ML Classification to Sound Category to Vibration Alert. A legend explains solid green arrows as Data/Audio Flow, dashed orange as Control/Mapping Flow, and dashed blue as Service Interaction." width="90%" />
 </p>
 
-**What this diagram shows.** This is the **conceptual system architecture** — a product-level view of the pipeline from raw microphone input to a haptic alert on the user's wrist or phone. It is intentionally framework-agnostic so that it stays valid whether the ML backend is AST on Core ML (current iOS build) or YAMNet on TensorFlow Lite (planned Android build).
+**What this diagram shows.** This is the **conceptual system architecture**, a product-level view of the pipeline from raw microphone input to a haptic alert on the user's wrist or phone. It is intentionally framework-agnostic so that it stays valid whether the ML backend is AST on Core ML (current iOS build) or YAMNet on TensorFlow Lite (planned Android build).
 
 **Reading guide (top row, left → right).**
 
-1. **Audio Capture.** The iOS microphone is opened via Expo AV. Audio is sampled at 16 kHz mono — the rate AST expects — and streamed into an in-memory rolling buffer. A live dB meter on the Home screen gives the user continuous feedback that monitoring is active.
+1. **Audio Capture.** The iOS microphone is opened via Expo AV. Audio is sampled at 16 kHz mono, the rate AST expects, and streamed into an in-memory rolling buffer. A live dB meter on the Home screen gives the user continuous feedback that monitoring is active.
 2. **Audio Processing.** The buffer is sliced into fixed-length windows (~10 s for AST inference; shorter for metering). Feature extraction happens inside the Core ML model (AST produces its own mel-spectrogram internally), so this stage is mostly framing and pre-emphasis in our build. The diagram names MFCC / Log-Mel as representative feature types for clarity.
 3. **Sound Classification (ML Model).** The on-device classifier ingests the processed window and returns a probability vector over 527 AudioSet classes. This is the most compute-intensive stage and runs on the Neural Engine on A12+ iPhones.
-4. **Alert Mapping.** Raw AudioSet scores are aggregated into 12 user-facing categories via a **priority-ordered label map** (keyword-matching with collision handling — e.g. "Baby laughter" resolves to Baby Crying, not Laughter, because of iteration order). Scores are calibrated into a 0.60–0.99 confidence range. If a category clears its dual gate (loudness + confidence), it becomes the alert.
+4. **Alert Mapping.** Raw AudioSet scores are aggregated into 12 user-facing categories via a **priority-ordered label map** (keyword-matching with collision handling; e.g. "Baby laughter" resolves to Baby Crying, not Laughter, because of iteration order). Scores are calibrated into a 0.60–0.99 confidence range. If a category clears its dual gate (loudness + confidence), it becomes the alert.
 5. **Vibration Output.** The alert category is handed to a haptic dispatcher (Expo Haptics on iOS) that plays the category's unique Tacton pattern. The high-contrast visual overlay is rendered in parallel. The diagram includes a paired smartwatch as a stretch-goal relay target.
 
-**Supporting services (middle row).** Settings & Customization owns enable/disable toggles, per-category vibration preview, and the sensitivity slider. Local Storage is AsyncStorage — small JSON blobs for preferences and the history log, all on-device. Privacy & Security is an explicit architectural lane, not a feature: it encodes the invariant that no audio leaves the device at any stage.
+**Supporting services (middle row).** Settings & Customization owns enable/disable toggles, per-category vibration preview, and the sensitivity slider. Local Storage is AsyncStorage, using small JSON blobs for preferences and the history log, all on-device. Privacy & Security is an explicit architectural lane, not a feature: it encodes the invariant that no audio leaves the device at any stage.
 
 **How to use this diagram.** Use this view when you want to understand *what* the system does and *which layer* owns a given behavior. It's what you'd show a PM, a new teammate, or a user research participant.
 
-### Diagram 2 — Runtime Sequence (Per-Alert Data Flow)
+### Diagram 2: Runtime Sequence (Per-Alert Data Flow)
 
-> 🖼️ **[DIAGRAM PLACEHOLDER #2 — `assets/architecture-sequence.png`]**
+> 🖼️ **[DIAGRAM PLACEHOLDER #2: `assets/architecture-sequence.png`]**
 >
 > **What this diagram should be.** A UML-style **sequence diagram** that complements Diagram 1 by showing the precise runtime interactions between layers for **a single alert event**, from acoustic onset to haptic output. Where Diagram 1 is a static product view, Diagram 2 is a dynamic engineering view that makes the 2-second latency budget visible.
 >
 > **How to build it.** Use [Excalidraw](https://excalidraw.com/), [Mermaid](https://mermaid.js.org/syntax/sequenceDiagram.html), or [Lucidchart](https://www.lucidchart.com/). A Mermaid starter is embedded below so the diagram renders inline on GitHub; export a PNG version too for the image placeholder.
 >
 > **Swim-lanes / participants (left → right):**
-> 1. **User's Environment** — emits the acoustic event (e.g., smoke alarm chirp).
-> 2. **iOS Microphone** — hardware layer, samples at 16 kHz.
-> 3. **`expo-av` (JS)** — opens the recorder, emits buffer and metering callbacks.
-> 4. **`App.js` (React Native)** — holds the rolling buffer, the dB gate, and the call site for classification.
-> 5. **`SoundClassifierBridge.m` / `SoundClassifier.swift`** — the native iOS module that receives buffers from JS and invokes Core ML.
-> 6. **`ASTClassifier.mlpackage` (Core ML)** — the on-device Neural-Engine inference target.
-> 7. **Post-processing (`App.js`)** — label map, aggregation, calibration, per-category gates.
-> 8. **Haptic Engine (`expo-haptics`) + UI (Alert Modal)** — the output layer.
+> 1. **User's Environment**: emits the acoustic event (e.g., smoke alarm chirp).
+> 2. **iOS Microphone**: hardware layer, samples at 16 kHz.
+> 3. **`expo-av` (JS)**: opens the recorder, emits buffer and metering callbacks.
+> 4. **`App.js` (React Native)**: holds the rolling buffer, the dB gate, and the call site for classification.
+> 5. **`SoundClassifierBridge.m` / `SoundClassifier.swift`**: the native iOS module that receives buffers from JS and invokes Core ML.
+> 6. **`ASTClassifier.mlpackage` (Core ML)**: the on-device Neural-Engine inference target.
+> 7. **Post-processing (`App.js`)**: label map, aggregation, calibration, per-category gates.
+> 8. **Haptic Engine (`expo-haptics`) + UI (Alert Modal)**: the output layer.
 >
 > **Required messages / arrows (top → bottom):**
 >
@@ -212,7 +212,7 @@ VibeCheck ships with **two architecture diagrams** that together give you both t
 >
 > **Visual requirements:** vertical lifelines for all 8 participants, horizontal arrows for each message, dashed return arrows for synchronous replies (steps 8 and 9), time annotations on the right-hand edge at steps 1, 7, 9, and 13. Use consistent colors from the brand palette (teal #26C6DA for data, violet #8A2BE2 for ML, amber #FFB300 for control).
 >
-> **Why a second diagram?** The conceptual diagram hides *where the latency budget is spent* and *which layer enforces privacy*. The sequence diagram answers both — it makes the ~200–400 ms ML step visible, shows that the Core ML call is the only compute-heavy step, and proves visually that no arrow ever leaves the device boundary.
+> **Why a second diagram?** The conceptual diagram hides *where the latency budget is spent* and *which layer enforces privacy*. The sequence diagram answers both: it makes the ~200–400 ms ML step visible, shows that the Core ML call is the only compute-heavy step, and proves visually that no arrow ever leaves the device boundary.
 
 A quick Mermaid version that renders inline on GitHub while the full designed PNG is being authored:
 
@@ -245,20 +245,20 @@ sequenceDiagram
 
 ## 📱 Usage Examples
 
-### Example 1 — Smoke alarm while cooking
+### Example 1: Smoke alarm while cooking
 
-> 🎞️ **[GIF PLACEHOLDER #2 — `assets/alert-detection.gif`]**
+> 🎞️ **[GIF PLACEHOLDER #2: `assets/alert-detection.gif`]**
 > *A 10–12 second screen recording (phone screen mirrored via QuickTime) showing: the Home screen with the live dB meter quiet → a smoke-alarm clip plays from an off-screen Bluetooth speaker → the dB meter spikes red → within ~1–2 seconds the full-screen red Smoke Alarm takeover appears (🚨 emoji, "SMOKE ALARM" text, timestamp) while the phone vibrates audibly → user taps Dismiss → new entry appears at the top of "Recent detections." Annotate with a small "~1.6s end-to-end" caption near the alert. 720p, 15fps, target file size ≤ 6 MB. Alt-text: "iPhone screen showing VibeCheck detecting a smoke alarm and triggering a full-screen red alert with haptic vibration in under two seconds."*
 
 **What to notice**
 - The live dB meter flips red as soon as the acoustic event crosses the detection threshold.
-- The alert modal takes over the full screen — no need for the user to look for a notification banner.
+- The alert modal takes over the full screen, so the user does not have to look for a notification banner.
 - Critical-priority alerts like Smoke Alarm use a **repeating** haptic until dismissed.
 - The event is logged in history with a full timestamp.
 
-### Example 2 — Customizing which sounds to monitor
+### Example 2: Customizing which sounds to monitor
 
-> 🎞️ **[GIF PLACEHOLDER #3 — `assets/customization.gif`]**
+> 🎞️ **[GIF PLACEHOLDER #3: `assets/customization.gif`]**
 > *An 8–10 second clip of the Preferences tab. Show the user: (1) toggling off Microwave, (2) toggling on Thunder, (3) tapping "Test Vibration" on the Doorbell row and the phone vibrating, (4) changing sensitivity from Medium to Low. Alt-text: "VibeCheck Preferences screen, user toggles categories on and off, previews a haptic pattern, and changes the sensitivity setting."*
 
 **Code-level behavior.** Preferences are persisted via `AsyncStorage`, keyed by category ID:
@@ -275,9 +275,9 @@ await AsyncStorage.setItem(
 );
 ```
 
-On the next app launch, preferences hydrate before the microphone starts listening — so a user's settings survive reboots, app updates, and even device migration (via iCloud app data backup).
+On the next app launch, preferences hydrate before the microphone starts listening, so a user's settings survive reboots, app updates, and even device migration (via iCloud app data backup).
 
-### Example 3 — Manually triggering an alert (for demos or practice)
+### Example 3: Manually triggering an alert (for demos or practice)
 
 Every sound tile on the Home screen doubles as a manual trigger for demo and testing purposes. Tap any tile to fire the alert UI and haptic without needing a real acoustic event. Useful when you want to teach a new user which vibration pattern means which sound.
 
@@ -339,10 +339,10 @@ Core runtime dependencies (see [`package.json`](package.json) for exact pinned v
 
 Native iOS (in `ios/VibeCheckNative/`):
 
-- `SoundClassifier.swift` — Core ML wrapper around the AST model.
-- `SoundClassifierBridge.m` — Objective-C bridge exposing the Swift class to React Native.
-- `ASTClassifier.mlpackage` — the 166 MB compiled Core ML model (stored via **Git LFS**).
-- `ast_labels.json` — the 527 AudioSet class labels.
+- `SoundClassifier.swift`: Core ML wrapper around the AST model.
+- `SoundClassifierBridge.m`: Objective-C bridge exposing the Swift class to React Native.
+- `ASTClassifier.mlpackage`: the 166 MB compiled Core ML model (stored via **Git LFS**).
+- `ast_labels.json`: the 527 AudioSet class labels.
 
 External systems:
 
@@ -362,7 +362,7 @@ No. The microphone stream is processed in memory and discarded. No audio buffer 
 <details>
 <summary><b>Does the app work without internet?</b></summary>
 
-Yes, completely. The Core ML model is bundled in the app binary at install time. After the initial install, VibeCheck never makes a network call for audio processing — it would keep working in airplane mode or on a plane.
+Yes, completely. The Core ML model is bundled in the app binary at install time. After the initial install, VibeCheck never makes a network call for audio processing, so it would keep working in airplane mode or on a plane.
 </details>
 
 <details>
@@ -380,7 +380,7 @@ Detection accuracy degrades gracefully with ambient noise. Our design target (re
 <details>
 <summary><b>Can I customize the vibration patterns?</b></summary>
 
-You can enable or disable any category and preview its built-in pattern from Preferences. Authoring custom patterns per category is a planned feature — the scaffolding is in place (`HAPTIC_PATTERNS` is a plain JS object in `App.js`), and a UI for editing patterns is in the roadmap.
+You can enable or disable any category and preview its built-in pattern from Preferences. Authoring custom patterns per category is a planned feature. The scaffolding is already in place (`HAPTIC_PATTERNS` is a plain JS object in `App.js`), and a UI for editing patterns is in the roadmap.
 </details>
 
 <details>
@@ -413,7 +413,7 @@ The current production build is iOS-only because AST runs beautifully on Apple's
 <details>
 <summary><b>How does VibeCheck compare to Apple Sound Recognition?</b></summary>
 
-Apple Sound Recognition detects ~14 fixed categories and delivers a standard iOS notification. VibeCheck detects a user-extendable set (the AST model scores 527 categories), delivers **category-specific haptic patterns** rather than a generic vibration, provides a persistent event history, and uses a full-screen high-contrast alert designed for DHH users rather than a notification banner. VibeCheck is complementary to Apple Sound Recognition — you can run both.
+Apple Sound Recognition detects ~14 fixed categories and delivers a standard iOS notification. VibeCheck detects a user-extendable set (the AST model scores 527 categories), delivers **category-specific haptic patterns** rather than a generic vibration, provides a persistent event history, and uses a full-screen high-contrast alert designed for DHH users rather than a notification banner. VibeCheck is complementary to Apple Sound Recognition; you can run both.
 </details>
 
 <details>
@@ -450,7 +450,7 @@ Open a pull request against `main` with a clear description of the change and an
 
 - Make sure `npx expo run:ios` still builds cleanly.
 - Avoid committing generated files (`ios/build/`, `ios/Pods/`, `.DS_Store`).
-- **Never** commit `weight.bin` as a regular blob — always through Git LFS.
+- **Never** commit `weight.bin` as a regular blob; always use Git LFS.
 
 ---
 
@@ -458,7 +458,7 @@ Open a pull request against `main` with a clear description of the change and an
 
 - **MIT CSAIL** for releasing the [AST: Audio Spectrogram Transformer](https://huggingface.co/MIT/ast-finetuned-audioset-10-10-0.4593) model under an open license.
 - **Google** for [AudioSet](https://research.google.com/audioset/), the 527-class ontology that underpins VibeCheck's classification.
-- **The DHH research community** — specifically the findings in Bragg et al. (2019), Brewster & Brown (Tactons, 2004), and Hoggan, Brewster & Johnston (CHI 2008) — which informed our haptic and trust design decisions.
+- **The DHH research community**, specifically the findings in Bragg et al. (2019), Brewster & Brown (Tactons, 2004), and Hoggan, Brewster & Johnston (CHI 2008), which informed our haptic and trust design decisions.
 - **Apple's Core ML and Core Haptics teams** for building an inference runtime and haptic API that make on-device assistive audio actually feasible on a phone.
 - **The Expo and React Native communities** for the cross-platform tooling that lets three undergrads ship a real iOS app in a single semester.
 - **Our EECS 497 instructors and classmates** for feedback across four major deliverables (Concept → Planning → Requirements → Testing).
